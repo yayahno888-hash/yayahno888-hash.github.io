@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monit · Case Study · Kyrylo Yakhno</title>
+<meta name="description" content="Case Study: Monit, eine interaktive 3D-Launch-Seite für eine erfundene Energy-Drink-Marke: ruhiger Fokus für lange Sessions am Bildschirm. Konzept, Iterationen, Umsetzung.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: honest project write-up, like a studio case study: what was the task, what was tried, what was thrown away, what shipped.
+IDEA: the case reads like the product: red cover, then calm grey pages with wireframes of every rejected version.
+PICTURE: SVG wireframes of the three iterations side by side, each with a verdict.
+COLOUR and TYPE: Monit red #F0442E cover, warm grey #ECEAE6 body, ink #171717; Outfit.
+LAYOUT: back link, cover with facts, Aufgabe, Prozess (iterations), Lösung (screenshots), Details, Ergebnis, Learnings, KI note, next.
+*/
+:root{--base:#ECEAE6;--ink:#171717;--mut:#6B6762;--line:rgba(23,23,23,.14);--red:#F0442E;color-scheme:light}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--base);color:var(--ink);font:17px/1.65 Outfit,system-ui,sans-serif;overflow-x:clip}
+a{color:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 max(4vw,20px)}
+.narrow{max-width:760px}
+.top{position:fixed;inset:0 0 auto;z-index:40}
+.top .wrap{display:flex;justify-content:space-between;align-items:center;height:72px}
+.top a{text-decoration:none;font-weight:600;font-size:15px;padding:9px 16px;border-radius:99px;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);color:var(--ink)}
+
+/* cover */
+.cover{background:var(--red);color:#2A0C06;min-height:100svh;display:grid;align-content:end;padding:110px 0 5svh;position:relative;overflow:hidden}
+.cover .wm{font:800 clamp(110px,min(30vw,38svh),520px)/.78 Outfit;letter-spacing:-.08em;margin:0 0 0 -.05em;color:#F5F0DC}
+.cover .lead{font:600 clamp(22px,2.6vw,36px)/1.2 Outfit;letter-spacing:-.03em;max-width:24ch;margin:0 0 4svh}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:18px 30px;border-top:1px solid rgba(42,12,6,.25);padding-top:18px;margin-top:4svh;font-size:15px}
+.facts span{display:block;opacity:.65;font-size:13px;font-weight:600}
+.facts b{font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 22px;border-radius:99px;text-decoration:none;font-weight:600;font-size:15px;border:1.5px solid currentColor}
+.btn.f{background:#2A0C06;color:#F5F0DC;border-color:#2A0C06}
+
+section{padding:clamp(64px,9vw,128px) 0}
+.kick{font-size:14px;font-weight:600;color:var(--mut);margin-bottom:18px;display:flex;gap:12px}
+.kick b{color:var(--ink)}
+h2{margin:0 0 26px;font:700 clamp(34px,4.4vw,64px)/1 Outfit;letter-spacing:-.05em}
+h3{margin:0 0 8px;font:600 22px/1.2 Outfit;letter-spacing:-.02em}
+p{margin:0 0 18px}
+.big{font:500 clamp(21px,2vw,28px)/1.4 Outfit;letter-spacing:-.02em}
+.muted{color:var(--mut)}
+
+/* iterations */
+.its{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px;margin-top:40px}
+.it{background:#fff;border-radius:22px;overflow:hidden;display:flex;flex-direction:column}
+.it svg{display:block;width:100%;height:auto;background:#F5F3EF}
+.it .b{padding:22px 24px 26px;display:flex;flex-direction:column;gap:8px;flex:1}
+.it .v{align-self:flex-start;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px;border-radius:99px}
+.v.no{background:#F3E1DD;color:#A3301D}.v.ok{background:#DCEFE3;color:#17724A}.v.mid{background:#F4ECD6;color:#8A6510}
+.it p{font-size:15.5px;color:#3b3935;margin:0}
+.refs{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.refs span{font-size:14px;font-weight:500;padding:7px 14px;border-radius:99px;background:#fff}
+
+/* live */
+.live{border-radius:26px;overflow:hidden;background:#111;aspect-ratio:16/10;position:relative;box-shadow:0 40px 90px -50px rgba(0,0,0,.6)}
+.live iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.poster{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,#F7E3DA,#EDB9A8);text-decoration:none;color:#2A0C06}
+.poster .wm2{font:800 clamp(70px,13vw,200px)/.8 Outfit;letter-spacing:-.08em}
+.poster small{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-weight:600;font-size:15px;background:#2A0C06;color:#F5F0DC;padding:10px 18px;border-radius:99px;white-space:nowrap}
+.shots{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,250px);gap:22px;max-width:1000px;margin:0 auto}
+.shots figure{margin:0}
+.shots img{width:100%;height:auto;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.06),0 24px 50px -30px rgba(40,20,10,.45)}
+.shots .s1{grid-column:1/3;grid-row:1}
+.shots .s2{grid-column:3;grid-row:1/3;align-self:start}
+.shots .s2 img{border:6px solid #171717;border-radius:30px}
+.shots .s3{grid-column:1;grid-row:2}
+.shots .s4{grid-column:2;grid-row:2}
+.shots figcaption{margin-top:10px;font-size:14px;line-height:1.45;color:var(--mut)}
+@media(max-width:760px){.shots{grid-template-columns:minmax(0,1fr)}.shots>figure{grid-column:1!important;grid-row:auto!important}.shots .s2{max-width:240px}}
+.bar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:14px;font-size:14px;color:var(--mut)}
+
+/* details */
+.det{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:0 40px}
+.det div{border-top:1px solid var(--line);padding:22px 0 28px}
+.det .n{font:700 14px Outfit;color:var(--red);margin-bottom:6px}
+.det p{font-size:16px;color:#3b3935;margin:0}
+
+.sw{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.sw i{width:44px;height:44px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+
+/* result */
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:20px}
+.nums div{background:#fff;border-radius:22px;padding:26px}
+.nums b{display:block;font:700 clamp(40px,4.4vw,60px)/1 Outfit;letter-spacing:-.05em;margin-bottom:8px}
+.nums span{font-size:15px;color:var(--mut)}
+
+.learn{list-style:none;padding:0;margin:0;counter-reset:l}
+.learn li{counter-increment:l;display:grid;grid-template-columns:56px minmax(0,1fr);padding:22px 0;border-top:1px solid var(--line)}
+.learn li::before{content:"0" counter(l);font-weight:700;color:var(--mut)}
+.learn b{display:block;font-size:19px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px}
+.learn span{color:#3b3935}
+
+.ai{background:#fff;border-radius:26px;padding:clamp(28px,4vw,48px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px}
+.ai ul{margin:0;padding:0;list-style:none}
+.ai li{padding:10px 0;border-top:1px solid var(--line);font-size:16px}
+@media(max-width:760px){.ai{grid-template-columns:minmax(0,1fr)}}
+
+.next{display:block;text-decoration:none;background:var(--ink);color:var(--base);border-radius:30px;padding:clamp(36px,6vw,80px);margin:0 max(2vw,10px)}
+.next span{opacity:.6;font-weight:600;font-size:15px}
+.next b{display:block;font:700 clamp(40px,6vw,96px)/1 Outfit;letter-spacing:-.05em;margin-top:10px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-top:28px;padding-bottom:28px;font-size:14px;color:var(--mut)}
+
+.rv{opacity:0;transform:translateY(26px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.cover .wm span{display:inline-block;transform:translateY(105%);animation:up 1.1s cubic-bezier(.2,.75,.2,1) forwards}
+@keyframes up{to{transform:none}}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.cover .wm span{animation:none;transform:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a href="index.html">&larr; Kyrylo Yakhno</a><a href="https://yayahno888-hash.github.io/monit/">Live ansehen ↗</a></div></header>
+
+<main>
+<section class="cover" aria-label="Monit">
+  <div class="wrap">
+    <p class="lead">Eine Launch-Seite für eine Energy-Drink-Marke, die es nicht gibt: ruhiger Fokus für lange Sessions am Bildschirm. Und trotzdem soll sie sich anfühlen wie ein echtes Produkt.</p>
+    <div class="wm" aria-label="monit"><span>m</span><span style="animation-delay:.05s">o</span><span style="animation-delay:.1s">n</span><span style="animation-delay:.15s">i</span><span style="animation-delay:.2s">t</span></div>
+    <div class="facts">
+      <div><span>Rolle</span><b>Konzept, Art Direction, Design, Frontend</b></div>
+      <div><span>Zeitraum</span><b>November 2026</b></div>
+      <div><span>Werkzeuge</span><b>HTML, CSS, JavaScript, three.js, GSAP, Lenis</b></div>
+      <div><span>Typ</span><b>Eigenes Projekt</b></div>
+    </div>
+    <div class="btns"><a class="btn f" href="https://yayahno888-hash.github.io/monit/">Live-Seite öffnen ↗</a><a class="btn" href="https://github.com/yayahno888-hash/monit">Code auf GitHub</a></div>
+  </div>
+</section>
+
+<section aria-label="Aufgabe">
+  <div class="wrap narrow">
+    <div class="kick rv"><b>01</b>Aufgabe</div>
+    <h2 class="rv">Produktseiten sind oft nur Bilder mit Text.</h2>
+    <p class="big rv">Ich wollte zeigen, dass eine Website selbst das Produkt präsentieren kann: Man soll die Dose drehen, den Modus wechseln und sehen, was drin ist, ohne dass eine einzige Fotodatei geladen wird.</p>
+    <p class="rv">Die Marke habe ich dafür selbst erfunden: <b>Monit</b>, aus „Monitor“. Kein lauter Energy Drink mit Spitze und Absturz, sondern ruhige Energie für Code, Design und Lernen: Koffein plus L-Theanin. Statt Geschmackssorten gibt es sechs Modi für verschiedene Situationen: Deep Work, Afterlunch, Sprint, Night Shift, Zero und Monochrom, jeder mit eigener Farbwelt. Ziel war eine Seite, die auf dem Laptop und auf dem Handy gleich gut funktioniert und schnell lädt.</p>
+  </div>
+</section>
+
+<section aria-label="Prozess" style="padding-top:0">
+  <div class="wrap">
+    <div class="kick rv"><b>02</b>Prozess</div>
+    <h2 class="rv">Drei Richtungen, zwei verworfen.</h2>
+    <div class="narrow rv">
+      <p>Am Anfang standen Referenzen: kurze Videos von Produktseiten und Kampagnen, die mir aufgefallen sind. Daraus habe ich nicht den Stil kopiert, sondern einzelne Ideen herausgezogen: ein Karussell, das sich wie ein Regal anfühlt, eine ruhige Typografie, viel Raum um das Produkt.</p>
+      <div class="refs"><span>Marmeladen-Karussell</span><span>Verpackungs-Kampagnen</span><span>brune-Stil: ruhig, warm, groß</span></div>
+    </div>
+    <div class="its">
+      <article class="it rv">
+        <svg viewBox="0 0 320 200" aria-label="Skizze Version 1: Bogen aus Dosen mit Früchten"><rect width="320" height="200" fill="#FBE9D9"/><path d="M40 150 Q160 20 280 150" fill="none" stroke="#E8B88F" stroke-width="2" stroke-dasharray="4 5"/>
+          <g fill="#F0442E"><rect x="52" y="104" width="18" height="40" rx="4"/><rect x="96" y="66" width="18" height="40" rx="4" fill="#F2C14E"/><rect x="151" y="48" width="18" height="40" rx="4" fill="#7650A8"/><rect x="206" y="66" width="18" height="40" rx="4" fill="#B8C98A"/><rect x="250" y="104" width="18" height="40" rx="4"/></g>
+          <g fill="#F2A33A"><circle cx="80" cy="54" r="7"/><circle cx="240" cy="40" r="9"/><circle cx="130" cy="150" r="6"/><circle cx="200" cy="160" r="8"/></g><text x="160" y="186" text-anchor="middle" font-family="Outfit" font-weight="800" font-size="16" fill="#C2410C">MONIT!</text></svg>
+        <div class="b"><span class="v no">Verworfen</span><h3>V1 · Bogen mit Früchten</h3><p>Dosen im Bogen, fliegende Früchte, bunte Emojis. Wirkte verspielt und schnell billig, wie Clipart. Die Marke verschwand hinter der Deko.</p></div>
+      </article>
+      <article class="it rv">
+        <svg viewBox="0 0 320 200" aria-label="Skizze Version 2: strenges Schweizer Raster"><rect width="320" height="200" fill="#fff"/><g stroke="#ddd"><line x1="80" y1="0" x2="80" y2="200"/><line x1="160" y1="0" x2="160" y2="200"/><line x1="240" y1="0" x2="240" y2="200"/><line x1="0" y1="100" x2="320" y2="100"/></g>
+          <text x="14" y="58" font-family="Outfit" font-weight="800" font-size="40" fill="#111">MONIT</text><rect x="176" y="20" width="16" height="64" fill="#111"/><rect x="200" y="20" width="16" height="64" fill="#F0442E"/><g fill="#999"><rect x="14" y="116" width="52" height="4"/><rect x="14" y="126" width="40" height="4"/><rect x="94" y="116" width="52" height="4"/><rect x="174" y="116" width="52" height="4"/><rect x="254" y="116" width="52" height="4"/></g><text x="14" y="184" font-family="Outfit" font-size="10" fill="#111">01 / 06 — CLASSIC</text></svg>
+        <div class="b"><span class="v no">Verworfen</span><h3>V2 · Schweizer Raster</h3><p>Strenges Grid, Versalien, Nummerierung. Technisch sauber, aber kalt. Es fühlte sich an wie ein Katalog, nicht wie etwas, das man trinken will.</p></div>
+      </article>
+      <article class="it rv">
+        <svg viewBox="0 0 320 200" aria-label="Skizze Version 3: ruhige warme Bühne mit großer Dose"><rect width="320" height="200" fill="#F4D9CF"/><text x="160" y="190" text-anchor="middle" font-family="Outfit" font-weight="800" font-size="74" fill="#2A1410" letter-spacing="-5">monit</text>
+          <rect x="140" y="38" width="40" height="96" rx="8" fill="#F0442E"/><rect x="146" y="38" width="6" height="96" fill="#fff" opacity=".35"/><g fill="#2A1410" opacity=".25"><rect x="230" y="70" width="14" height="32" rx="3"/><rect x="252" y="70" width="14" height="32" rx="3"/><rect x="274" y="70" width="14" height="32" rx="3"/></g><circle cx="84" cy="60" r="3" fill="#2A1410"/><line x1="87" y1="60" x2="138" y2="80" stroke="#2A1410" stroke-width="1"/></svg>
+        <div class="b"><span class="v ok">Umgesetzt</span><h3>V3 · Ruhige Bühne</h3><p>Warme Farbflächen pro Modus, riesiger Schriftzug hinter der Dose, viel Luft. Das Produkt steht im Mittelpunkt, alles andere tritt zurück.</p></div>
+      </article>
+    </div>
+    <div class="narrow rv" style="margin-top:48px">
+      <h3>Danach: Feinschliff in vielen kleinen Runden</h3>
+      <p class="muted">Scroll-gesteuerte Animationen habe ich wieder entfernt. Sie wirkten wie ein Effekt um des Effekts willen. Stattdessen laufen die Szenen jetzt selbstständig ab, sobald sie sichtbar sind. Die Sortenauswahl wurde von Textknöpfen zu kleinen gerenderten Dosen, und ein Klick wechselt die Sorte sofort statt mit Verzögerung. Später kam die neue Markenidee dazu: aus den Sorten wurden Modi, und ein eigener Abschnitt „Keine Spitze. Kein Absturz.“ zeigt die Energiekurve im Vergleich zu einem normalen Energy Drink.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-label="Lösung" style="padding-top:0">
+  <div class="wrap">
+    <div class="kick rv"><b>03</b>Lösung</div>
+    <h2 class="rv">So sieht es aus.</h2>
+    <div class="shots rv">
+      <figure class="s1"><img src="img/monit-hero.jpg" width="790" height="478" alt="Startseite: sechs 3D-Dosen vor dem Schriftzug monit"><figcaption>Start: sechs Modi als 3D-Dosen, ein Klick führt zum Modus.</figcaption></figure>
+      <figure class="s2"><img src="img/monit-mobile.jpg" width="468" height="1005" alt="Startseite auf dem Handy" loading="lazy"><figcaption>Handy: eigenes Layout, Dosen im Raster.</figcaption></figure>
+      <figure class="s3"><img src="img/monit-modes.jpg" width="790" height="478" alt="Modus Deep Work mit Nährwerten und Modus-Auswahl" loading="lazy"><figcaption>Modi: Farbe, Werte und Dose wechseln zusammen.</figcaption></figure>
+      <figure class="s4"><img src="img/monit-chart.jpg" width="790" height="478" alt="Energiekurve: Monit gleichmäßig, typischer Energy Drink mit Spitze und Absturz" loading="lazy"><figcaption>Die Idee als Kurve: keine Spitze, kein Absturz.</figcaption></figure>
+    </div>
+    <div class="bar"><span>Am besten selbst ausprobieren, auf dem Laptop oder dem Handy.</span><a href="https://yayahno888-hash.github.io/monit/">Live-Seite öffnen ↗</a></div>
+  </div>
+</section>
+
+<section aria-label="Details" style="padding-top:0">
+  <div class="wrap">
+    <div class="kick rv"><b>04</b>Details</div>
+    <h2 class="rv">Was im Kleinen passiert.</h2>
+    <div class="det rv">
+      <div><div class="n">Hero</div><h3>Sechs Dosen in Echtzeit-3D</h3><p>Alle Dosen sind in three.js gebaut, nicht fotografiert. Hover hebt eine Dose an, ein Klick springt direkt zum Modus. Gebaut wird alles hinter einem Ladebildschirm, damit die ersten Sekunden nicht ruckeln.</p></div>
+      <div><div class="n">Modi</div><h3>Farbe als System</h3><p>Jeder Modus hat eine eigene Palette. Hintergrund, Schrift, Tab-Icon und sogar die Farbe der Browserleiste wechseln gemeinsam, und jeder Modus hat einen eigenen Link.</p></div>
+      <div><div class="n">Anatomie</div><h3>Zutaten aus der Dose</h3><p>Linien führen von der Dose zu den echten Zutaten des jeweiligen Modus. Beim Wechsel ordnen sie sich neu.</p></div>
+      <div><div class="n">Auswahl</div><h3>Mini-Dosen als Menü</h3><p>Die Vorschaubilder im Menü werden beim Laden aus denselben 3D-Modellen gerendert. Keine Bilddateien.</p></div>
+      <div><div class="n">Leistung</div><h3>Eine Schleife für alles</h3><p>Alle 3D-Szenen laufen in einer gemeinsamen Animationsschleife und pausieren außerhalb des Bildschirms. Texturen werden vorab vorbereitet, die Bildschärfe passt sich dem Gerät an.</p></div>
+      <div><div class="n">Mobil</div><h3>Eigene Kameras fürs Handy</h3><p>Auf schmalen Bildschirmen rücken Kamera und Layout neu zusammen, statt einfach nur kleiner zu werden. Für ältere iPhones gibt es eine leichtere Version.</p></div>
+    </div>
+    <div class="sw rv" aria-label="Farben der sechs Modi"><i style="background:#F0442E"></i><i style="background:#F2C14E"></i><i style="background:#B8C98A"></i><i style="background:#7650A8"></i><i style="background:#1d1d1d"></i><i style="background:#E8E4DC"></i></div>
+  </div>
+</section>
+
+<section aria-label="Ergebnis" style="padding-top:0">
+  <div class="wrap">
+    <div class="kick rv"><b>05</b>Ergebnis</div>
+    <h2 class="rv">Eine Datei, keine Bilder.</h2>
+    <div class="nums rv">
+      <div><b>1</b><span>HTML-Datei für die ganze Seite</span></div>
+      <div><b>0</b><span>Bilddateien, alles wird live gerendert</span></div>
+      <div><b>6</b><span>Modi mit eigener Farbwelt</span></div>
+      <div><b>~55 KB</b><span>eigener Code, dazu three.js, GSAP und Lenis</span></div>
+    </div>
+  </div>
+</section>
+
+<section aria-label="Learnings" style="padding-top:0">
+  <div class="wrap narrow">
+    <div class="kick rv"><b>06</b>Learnings</div>
+    <h2 class="rv">Was ich mitnehme.</h2>
+    <ol class="learn rv">
+      <li><b>Weglassen ist die schwerste Entscheidung.</b><span>Die Früchte, die Emojis, ein Formular, ein Foto-Bereich: alles war schon gebaut und flog trotzdem raus, weil die Seite ohne besser war.</span></li>
+      <li><b>Referenzen genau lesen.</b><span>Wenn mir etwas gefällt, frage ich mich jetzt, welches Detail genau. Den ganzen Stil zu übernehmen hat bei V2 nicht funktioniert.</span></li>
+      <li><b>Bewegung braucht einen Grund.</b><span>Animation soll das Produkt zeigen, nicht vom Produkt ablenken.</span></li>
+      <li><b>Eine Marke braucht eine Idee, nicht nur ein Design.</b><span>Erst als klar war, wofür Monit steht, ruhige Energie für lange Sessions, passten Name, Modi und Texte zusammen.</span></li>
+      <li><b>Auf echten Geräten testen.</b><span>Mein Laptop-Bildschirm ist niedriger als gedacht, und auf dem Handy war die Dose erst viel zu groß. Gefunden habe ich das nur durch Ausprobieren.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section aria-label="Arbeitsweise mit KI" style="padding-top:0">
+  <div class="wrap">
+    <div class="kick rv"><b>07</b>Ehrlich gesagt</div>
+    <div class="ai rv">
+      <div><h2 style="font-size:clamp(30px,3.4vw,46px)">Gebaut mit KI als Partner.</h2><p class="muted">Den Code habe ich zusammen mit Claude, einem KI-Assistenten, geschrieben. Ich finde es wichtig, das offen zu sagen.</p></div>
+      <ul>
+        <li><b>Von mir:</b> Idee, Marke, Referenzen, Art Direction</li>
+        <li><b>Von mir:</b> jede Entscheidung, was bleibt und was rausfliegt</li>
+        <li><b>Von mir:</b> Testen auf meinen Geräten, Feedback in jeder Runde</li>
+        <li><b>Von der KI:</b> der Großteil des Codes, nach meinen Vorgaben</li>
+        <li><b>Gemeinsam:</b> Fehlersuche und Veröffentlichung</li>
+        <li><b>Mein nächster Schritt:</b> den Code Stück für Stück selbst verstehen, damit ich jede Stelle erklären kann</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<a class="next rv" href="index.html#contact"><span>Interesse?</span><b>Schreib mir &rarr;</b></a>
+</main>
+
+<footer><div class="wrap"><span>© 2026 Kyrylo Yakhno · Rostock</span><a href="index.html">Zurück zur Startseite</a></div></footer>
+
+<script>
+{
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+}
+</script>
+</body>
+</html>
