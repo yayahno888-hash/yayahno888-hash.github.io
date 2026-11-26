@@ -75,6 +75,9 @@ p{margin:0 0 18px}
 .poster{position:absolute;inset:0;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,#F7E3DA,#EDB9A8);text-decoration:none;color:#2A0C06}
 .poster .wm2{font:800 clamp(70px,13vw,200px)/.8 Outfit;letter-spacing:-.08em}
 .poster small{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-weight:600;font-size:15px;background:#2A0C06;color:#F5F0DC;padding:10px 18px;border-radius:99px;white-space:nowrap}
+.demo{max-width:1000px;margin:0 auto 28px}
+.demo video{display:block;width:100%;height:auto;border-radius:14px;background:#ECEAE6;box-shadow:0 1px 0 rgba(0,0,0,.06),0 30px 60px -34px rgba(40,20,10,.5)}
+.demo figcaption{margin-top:10px;font-size:14px;color:var(--mut)}
 .shots{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,250px);gap:22px;max-width:1000px;margin:0 auto}
 .shots figure{margin:0}
 .shots img{width:100%;height:auto;border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.06),0 24px 50px -30px rgba(40,20,10,.45)}
@@ -189,6 +192,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
   <div class="wrap">
     <div class="kick rv"><b>03</b>Lösung</div>
     <h2 class="rv">So sieht es aus.</h2>
+    <figure class="demo rv">
+      <video id="demo" src="img/monit-demo.mp4" poster="img/monit-demo.jpg" width="1280" height="614" muted loop playsinline preload="metadata" aria-label="Bildschirmaufnahme: Durch die Monit-Seite scrollen, Modi wechseln, Zutaten ansehen"></video>
+      <figcaption>30 Sekunden durch die Seite: Start, Modus-Wechsel, Energiekurve, Zutaten. Aufgenommen im Browser, ohne Schnitt.</figcaption>
+    </figure>
     <div class="shots rv">
       <figure class="s1"><img src="img/monit-hero.jpg" width="790" height="478" alt="Startseite: sechs 3D-Dosen vor dem Schriftzug monit"><figcaption>Start: sechs Modi als 3D-Dosen, ein Klick führt zum Modus.</figcaption></figure>
       <figure class="s2"><img src="img/monit-mobile.jpg" width="468" height="1005" alt="Startseite auf dem Handy" loading="lazy"><figcaption>Handy: eigenes Layout, Dosen im Raster.</figcaption></figure>
@@ -268,6 +275,9 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 {
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+const dv=document.getElementById('demo');
+if(dv){if(matchMedia('(prefers-reduced-motion: reduce)').matches){dv.controls=true}else{
+  const vo=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){dv.play().catch(()=>{dv.controls=true})}else dv.pause()}),{threshold:.25});vo.observe(dv)}}
 }
 </script>
 </body>
