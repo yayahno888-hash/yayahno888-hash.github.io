@@ -193,7 +193,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
     <div class="kick rv"><b>03</b>Lösung</div>
     <h2 class="rv">So sieht es aus.</h2>
     <figure class="demo rv">
-      <video id="demo" src="img/monit-demo.mp4" poster="img/monit-demo.jpg" width="1280" height="614" muted loop playsinline preload="metadata" aria-label="Bildschirmaufnahme: Durch die Monit-Seite scrollen, Modi wechseln, Zutaten ansehen"></video>
+      <video id="demo" src="img/monit-demo.mp4" poster="img/monit-demo.jpg" width="1280" height="614" autoplay muted loop playsinline preload="auto" aria-label="Bildschirmaufnahme: Durch die Monit-Seite scrollen, Modi wechseln, Zutaten ansehen"></video>
       <figcaption>30 Sekunden durch die Seite: Start, Modus-Wechsel, Energiekurve, Zutaten. Aufgenommen im Browser, ohne Schnitt.</figcaption>
     </figure>
     <div class="shots rv">
@@ -276,7 +276,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 const dv=document.getElementById('demo');
-if(dv){if(matchMedia('(prefers-reduced-motion: reduce)').matches){dv.controls=true}else{
+if(dv){if(matchMedia('(prefers-reduced-motion: reduce)').matches){dv.removeAttribute('autoplay');dv.pause();dv.controls=true}else{
   const vo=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){dv.play().catch(()=>{dv.controls=true})}else dv.pause()}),{threshold:.25});vo.observe(dv)}}
 }
 </script>
