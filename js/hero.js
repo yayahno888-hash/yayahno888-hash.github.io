@@ -14,7 +14,7 @@
   const LEAVES = PHONE ? 1500 : 3500;
   const PETALS = PHONE ? 40 : 110;   // fliegende Blütenblätter
   const STARS = PHONE ? 250 : 600;
-  const INTRO = 2.6;                 // Sekunden, bis das ganze Feld erblüht ist
+  const INTRO = 3.8;                 // Sekunden, bis das ganze Feld erblüht ist
 
   /** Name und Text erscheinen lassen (auch ohne 3D) */
   const revealText = () => document.body.classList.add('intro-done');
@@ -88,9 +88,10 @@
       vec3 p = position;
 
       // Intro: Blüten hinter der Welle sind schon offen, davor noch geschlossen
-      float bloom = clamp((uIntro - p.z) / 3.0, 0.0, 1.0);
-      float pop = bloom + sin(bloom * 3.1416) * 0.25;        // kurz größer, dann normal
-      p.y -= (1.0 - bloom) * 0.35;                           // wächst aus dem Boden
+      // breite, weiche Front: jede Blüte öffnet sich über mehrere Meter statt schlagartig
+      float bloom = smoothstep(0.0, 1.0, clamp((uIntro - p.z) / 7.0, 0.0, 1.0));
+      float pop = bloom + sin(bloom * 3.1416) * 0.1;         // ganz leicht größer, dann normal
+      p.y -= (1.0 - bloom) * 0.3;                            // wächst aus dem Boden
 
       // Grundwind und Böen, die als helle Wellen zur Kamera laufen
       float gust = pow(max(0.0, sin(p.z * 0.22 - uTime * 1.5 + sin(p.x * 0.15) * 1.2)), 8.0);
@@ -297,7 +298,9 @@
     const camBase = new THREE.Vector3(0, 1.35, 6.5);
     camera.position.copy(camBase);
     camera.lookAt(LOOK);
-    const easeOut = (x) => 1 - (1 - x) ** 3;
+    // sanft anfahren und sanft auslaufen, ohne Ruck am Ende
+    const easeInOut = (x) => (x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
+    const smooth01 = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
     let start = 0;
     let lastTime = 0;
     let textShown = false;
@@ -314,15 +317,15 @@
 
       // Intro: Welle vom Horizont (z = -50) bis hinter die Kamera (z = 10)
       const k = REDUCED ? 1 : Math.min(1, age / INTRO);
-      const front = -50 + easeOut(k) * 62;
-      if (!textShown && k > 0.45) { textShown = true; revealText(); }
+      const front = -50 + easeInOut(k) * 66;   // Front läuft über die Kamera hinaus, damit vorn nichts abrupt aufpoppt
+      if (!textShown && k > 0.35) { textShown = true; revealText(); }
 
       // Kamera: leichte Parallaxe mit der Maus, beim Scrollen über das Feld nach vorn
       const r = hero.getBoundingClientRect();
       const scroll = REDUCED ? 0 : Math.min(1, Math.max(0, -r.top / r.height));
       camera.position.x += (camBase.x + pointer.nx * 0.5 - camera.position.x) * 0.05;
       camera.position.y += (camBase.y + pointer.ny * 0.15 - scroll * 0.5 - camera.position.y) * 0.05;
-      camera.position.z = camBase.z - scroll * 5 + (1 - easeOut(k)) * 1.5; // beim Intro leicht heranfahren
+      camera.position.z = camBase.z - scroll * 5 + (1 - easeInOut(k)) * 1.8; // beim Intro langsam heranfahren
       camera.lookAt(LOOK);
 
       if (pointer.active && !REDUCED && ray) {
@@ -336,8 +339,9 @@
         m.uniforms.uTime.value = t;
         m.uniforms.uIntro.value = m === petalMat ? 99 : front;
       });
-      if (petals && k >= 1) petals.update(dt, t);
-      petals && (petals.visible = k >= 1);
+      // Blütenblätter fliegen von Anfang an, werden aber erst gegen Ende des Intros sichtbar
+      if (petals) petals.update(dt, t);
+      petalMat.uniforms.uOpacity.value = 0.85 * smooth01(0.6, 1.0, k);
       renderer.render(scene, camera);
     }
     requestAnimationFrame(frame);
