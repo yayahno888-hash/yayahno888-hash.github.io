@@ -1,16 +1,16 @@
-// Erster Bildschirm: Tausende Lichtpunkte fliegen herein und formen den Namen.
-// Die Maus schiebt sie weg (wie Wind), beim Scrollen fliegen sie auseinander.
-// Ohne WebGL bleibt der Name als normaler Text stehen (siehe .name im CSS).
+// Erster Bildschirm: ein Feld aus Tausenden kleinen Blüten, das bis zum Horizont reicht.
+// Wind bewegt sie leicht, unter der Maus heben sich die Blüten und leuchten auf.
+// Beim Scrollen fliegt die Kamera ein Stück über das Feld.
+// Ohne WebGL bleibt nur der Name auf dunklem Grund stehen.
 (() => {
   const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
   const canvas = document.getElementById('gl');
   const hero = document.getElementById('hero');
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 900;
-  const COUNT = PHONE ? 7000 : 18000; // Punkte im Namen
-  const STARS = PHONE ? 500 : 1400;  // ferne Punkte im Hintergrund
-  const TEXT_WIDTH = 10;             // Breite des Namens in 3D-Einheiten
-  const FLY_IN = 2.2;                // Sekunden bis der Name steht
+  const FLOWERS = PHONE ? 6500 : 16000;
+  const LEAVES = PHONE ? 1500 : 3500;
+  const STARS = PHONE ? 250 : 600;
 
   function supportsWebGL() {
     try {
@@ -31,233 +31,235 @@
     });
   }
 
-  /** Schreibt den Namen auf ein unsichtbares Canvas und sammelt die Pixel, die zur Schrift gehören */
-  function sampleName(lines) {
-    const W = 1200;
-    const probe = document.createElement('canvas').getContext('2d');
-    probe.font = '800 100px Unbounded, sans-serif';
-    const widest = Math.max(...lines.map((l) => probe.measureText(l).width));
-    const size = Math.floor((100 * W * 0.96) / widest); // Schrift so groß, dass die längste Zeile passt
-    const lineHeight = size * 1.02;
-    const H = Math.ceil(lines.length * lineHeight + size * 0.3);
-
+  /** Eine Blüte mit fünf Blättern, auf Canvas gezeichnet (weiß, die Farbe kommt pro Blüte dazu) */
+  function flowerTexture() {
+    const S = 128;
     const c = document.createElement('canvas');
-    c.width = W;
-    c.height = H;
+    c.width = c.height = S;
     const ctx = c.getContext('2d');
-    ctx.font = `800 ${size}px Unbounded, sans-serif`;
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    lines.forEach((line, i) => ctx.fillText(line, W / 2, H / 2 + (i - (lines.length - 1) / 2) * lineHeight));
-
-    const data = ctx.getImageData(0, 0, W, H).data;
-    const points = [];
-    for (let y = 0; y < H; y += 3) {
-      for (let x = 0; x < W; x += 3) {
-        if (data[(y * W + x) * 4 + 3] > 140) points.push([x, y]);
-      }
+    ctx.translate(S / 2, S / 2);
+    for (let k = 0; k < 5; k++) {
+      ctx.save();
+      ctx.rotate((k / 5) * Math.PI * 2);
+      const g = ctx.createLinearGradient(0, -8, 0, -58);
+      g.addColorStop(0, '#ffffff');
+      g.addColorStop(1, '#dcdbe6'); // Blattspitzen etwas dunkler, wirkt plastisch
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      // Blatt: unten schmal, oben rund
+      ctx.moveTo(0, -6);
+      ctx.bezierCurveTo(-20, -18, -22, -50, 0, -58);
+      ctx.bezierCurveTo(22, -50, 20, -18, 0, -6);
+      ctx.fill();
+      ctx.restore();
     }
-    return { points, W, H };
+    ctx.fillStyle = '#fff6e8';
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+    return new THREE.CanvasTexture(c);
   }
 
-  /** Runder, weicher Lichtpunkt als Textur */
-  function glowTexture() {
+  /** Ein schmales Blatt für die dunkle Wiese unter den Blüten */
+  function leafTexture() {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
     const ctx = c.getContext('2d');
-    const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-    g.addColorStop(0, 'rgba(255,255,255,1)');
-    g.addColorStop(0.35, 'rgba(255,255,255,.55)');
-    g.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, 64, 64);
+    ctx.translate(32, 32);
+    ctx.rotate(0.5);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 9, 28, 0, 0, Math.PI * 2);
+    ctx.fill();
     return new THREE.CanvasTexture(c);
+  }
+
+  /** Sanfte Hügel: Höhe des Bodens an Position x, z */
+  const ground = (x, z) => Math.sin(x * 0.22 + 1.2) * 0.35 + Math.cos(z * 0.17) * 0.4 + Math.max(0, x) * 0.035;
+
+  // Shader: Wind, Leuchten unter der Maus, Ausblenden in der Ferne, gedrehte Blüten
+  const vertexShader = `
+    uniform float uTime;
+    uniform vec2 uMouse;
+    uniform float uScale;
+    uniform float uGlow;
+    attribute float aSize;
+    attribute float aPhase;
+    attribute vec3 aColor;
+    varying vec3 vColor;
+    varying float vAlpha;
+    varying float vGlow;
+    varying float vRot;
+    void main() {
+      vec3 p = position;
+      // Wind: Wellen laufen über das Feld
+      p.x += sin(uTime * 0.9 + aPhase * 6.283 + p.z * 0.35) * 0.05;
+      p.y += cos(uTime * 0.7 + aPhase * 12.0) * 0.018;
+      // Maus: Blüten im Umkreis heben sich und leuchten
+      float g = smoothstep(1.9, 0.0, distance(p.xz, uMouse)) * uGlow;
+      p.y += g * 0.4;
+      vGlow = g;
+      vec4 mv = modelViewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = aSize * (1.0 + g * 0.55) * uScale / -mv.z;
+      vAlpha = smoothstep(48.0, 16.0, -mv.z);   // in der Ferne verblassen
+      vColor = aColor;
+      vRot = aPhase * 6.283 + uTime * 0.25 * (aPhase - 0.5);
+    }
+  `;
+  const fragmentShader = `
+    uniform sampler2D uTex;
+    uniform float uOpacity;
+    varying vec3 vColor;
+    varying float vAlpha;
+    varying float vGlow;
+    varying float vRot;
+    void main() {
+      vec2 c = gl_PointCoord - 0.5;
+      float s = sin(vRot), co = cos(vRot);
+      vec4 t = texture2D(uTex, vec2(co * c.x - s * c.y, s * c.x + co * c.y) + 0.5);
+      if (t.a < 0.3) discard;
+      // Farbe ohne die dunklen Ränder der Textur (Kantenpixel sind sonst fast schwarz)
+      vec3 tex = t.rgb / max(t.a, 0.001);
+      vec3 col = mix(vColor, vec3(0.72, 0.96, 1.0), vGlow * 0.75) * (0.82 + vGlow * 0.55);
+      gl_FragColor = vec4(col * tex, smoothstep(0.3, 0.6, t.a) * vAlpha * uOpacity);
+    }
+  `;
+
+  /** Erzeugt eine Punktwolke (Blüten oder Blätter) mit dem Shader oben */
+  function field(count, texture, pickColour, sizeRange, opacity, glow, yOffset) {
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    const size = new Float32Array(count);
+    const phase = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const z = 6 - Math.random() ** 0.8 * 50;     // von kurz vor der Kamera bis weit hinten, hinten dichter
+      const width = 16 + -Math.min(0, z) * 1.5;    // hinten breiter, weil die Sicht sich öffnet
+      const x = (Math.random() - 0.5) * width;
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = ground(x, z) + yOffset + Math.random() * 0.12;
+      pos[i * 3 + 2] = z;
+      col.set(pickColour(), i * 3);
+      size[i] = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
+      phase[i] = Math.random();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+    geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+    const material = new THREE.ShaderMaterial({
+      vertexShader, fragmentShader, transparent: true, depthWrite: true,
+      uniforms: {
+        uTime: { value: 0 }, uMouse: { value: new THREE.Vector2(999, 999) }, uScale: { value: 400 },
+        uTex: { value: texture }, uOpacity: { value: opacity }, uGlow: { value: glow },
+      },
+    });
+    return new THREE.Points(geo, material);
   }
 
   function build() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio, PHONE ? 1.5 : 2));
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-    camera.position.set(0, 0, 11);
-    const group = new THREE.Group();
-    scene.add(group);
-    const sprite = glowTexture();
+    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 120);
+    const LOOK = new THREE.Vector3(0, 0.1, -14);
 
-    // --- Punkte des Namens: Start (zufällige Wolke) und Ziel (Pixel der Schrift) ---
-    const { points, W, H } = sampleName(['KYRYLO', 'YAKHNO']);
-    const start = new Float32Array(COUNT * 3);
-    const target = new Float32Array(COUNT * 3);
-    const scatterDir = new Float32Array(COUNT * 3); // Richtung beim Auseinanderfliegen
-    const offset = new Float32Array(COUNT * 3);     // Verschiebung durch die Maus
-    const delay = new Float32Array(COUNT);
-    const position = new Float32Array(COUNT * 3);
-    const colour = new Float32Array(COUNT * 3);
-    const palette = [[0.95, 0.94, 0.91], [0.95, 0.94, 0.91], [0.95, 0.94, 0.91], [0.73, 0.64, 1.0], [0.55, 0.82, 1.0]];
+    // Blütenfarben: meist weiß, dazu zartes Rosa, Eisblau und Flieder (perlmuttartig)
+    const tints = [[0.96, 0.95, 0.97], [0.96, 0.95, 0.97], [0.96, 0.95, 0.97], [0.98, 0.82, 0.9], [0.76, 0.93, 0.98], [0.86, 0.82, 1.0]];
+    const flowers = field(FLOWERS, flowerTexture(), () => tints[(Math.random() * tints.length) | 0], [0.14, 0.3], 1, 1, 0.05);
+    const leaves = field(LEAVES, leafTexture(), () => [0.12 + Math.random() * 0.06, 0.3 + Math.random() * 0.12, 0.25], [0.22, 0.45], 0.32, 0, -0.05);
+    scene.add(leaves, flowers);
 
-    for (let i = 0; i < COUNT; i++) {
-      const [px, py] = points[(Math.random() * points.length) | 0];
-      target[i * 3] = (px / W - 0.5) * TEXT_WIDTH + (Math.random() - 0.5) * 0.03;
-      target[i * 3 + 1] = -((py - H / 2) / W) * TEXT_WIDTH + (Math.random() - 0.5) * 0.03;
-      target[i * 3 + 2] = (Math.random() - 0.5) * 0.35;
-
-      // Start irgendwo in einer großen Kugel um die Kamera
-      const r = 6 + Math.random() * 10;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      start[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      start[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      start[i * 3 + 2] = r * Math.cos(phi) - 4;
-
-      const len = Math.hypot(target[i * 3], target[i * 3 + 1], 1) || 1;
-      scatterDir[i * 3] = target[i * 3] / len + (Math.random() - 0.5) * 0.6;
-      scatterDir[i * 3 + 1] = target[i * 3 + 1] / len + (Math.random() - 0.5) * 0.6;
-      scatterDir[i * 3 + 2] = 0.6 + Math.random();
-
-      delay[i] = Math.random() * 0.9;
-      const c = palette[(Math.random() * palette.length) | 0];
-      colour.set(c, i * 3);
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(REDUCED ? target.slice() : start.slice(), 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colour, 3));
-    const material = new THREE.PointsMaterial({
-      size: PHONE ? 0.075 : 0.06, map: sprite, vertexColors: true, transparent: true,
-      depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true,
-    });
-    group.add(new THREE.Points(geometry, material));
-
-    // --- Ferne Punkte für Tiefe ---
+    // Ein paar ferne Sterne über dem Horizont
     const starPos = new Float32Array(STARS * 3);
     for (let i = 0; i < STARS; i++) {
-      starPos[i * 3] = (Math.random() - 0.5) * 60;
-      starPos[i * 3 + 1] = (Math.random() - 0.5) * 36;
-      starPos[i * 3 + 2] = -6 - Math.random() * 30;
+      starPos[i * 3] = (Math.random() - 0.5) * 120;
+      starPos[i * 3 + 1] = 4 + Math.random() * 30;
+      starPos[i * 3 + 2] = -50 - Math.random() * 20;
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
-      size: 0.09, map: sprite, color: 0x8f86b8, transparent: true, opacity: 0.55,
-      depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
-    scene.add(stars);
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ size: 0.12, color: 0x9a94b8, transparent: true, opacity: 0.6 })));
 
-    // --- Größe: Name so skalieren, dass er in den Bildschirm passt ---
+    const materials = [flowers.material, leaves.material];
     function resize() {
       const w = hero.clientWidth;
       const h = hero.clientHeight;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
+      // Auf schmalen Bildschirmen weiter weg, damit das Feld nicht zu eng wirkt
+      camera.fov = w < 700 ? 62 : 48;
       camera.updateProjectionMatrix();
-      const visibleH = 2 * Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
-      const visibleW = visibleH * camera.aspect;
-      const nameH = (TEXT_WIDTH * H) / W;
-      const scale = Math.min(visibleW * 0.88 / TEXT_WIDTH, visibleH * 0.5 / nameH);
-      group.scale.setScalar(scale);
-      group.position.y = visibleH * (w < 700 ? 0.06 : 0.04); // etwas über der Mitte, unten steht Text
+      materials.forEach((m) => { m.uniforms.uScale.value = h * renderer.getPixelRatio() * 0.5; });
     }
     new ResizeObserver(resize).observe(hero);
     resize();
 
-    // --- Maus in 3D-Koordinaten der Namensebene umrechnen ---
-    const mouse = { x: 999, y: 999, nx: 0, ny: 0 };
-    const v = new THREE.Vector3();
+    // Maus auf den Boden projizieren (Ebene y = 0)
+    const ray = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const hit = new THREE.Vector3();
+    const pointer = { nx: 0, ny: 0, active: false };
     hero.addEventListener('pointermove', (e) => {
-      const rect = hero.getBoundingClientRect();
-      mouse.nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.ny = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-      v.set(mouse.nx, mouse.ny, 0.5).unproject(camera).sub(camera.position).normalize();
-      const dist = -camera.position.z / v.z; // Schnittpunkt mit der Ebene z = 0
-      const p = camera.position.clone().add(v.multiplyScalar(dist));
-      mouse.x = (p.x - group.position.x) / group.scale.x;
-      mouse.y = (p.y - group.position.y) / group.scale.y;
+      const r = hero.getBoundingClientRect();
+      pointer.nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      pointer.ny = -((e.clientY - r.top) / r.height) * 2 + 1;
+      pointer.active = true;
     }, { passive: true });
-    hero.addEventListener('pointerleave', () => { mouse.x = mouse.y = 999; });
+    hero.addEventListener('pointerleave', () => { pointer.active = false; });
 
-    // Nur rendern, solange der erste Bildschirm sichtbar ist
     let visible = true;
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(hero);
 
-    const easeOutCubic = (x) => 1 - (1 - x) ** 3;
-    const RADIUS = 1.1;
-    const pos = geometry.attributes.position.array;
-    let startTime = 0;
+    // Wird das Gerät dauerhaft langsam, weniger Schärfe und weniger Blüten
+    let slow = 0;
     let lastTime = 0;
-    let slowFrames = 0;
-    let active = COUNT; // so viele Punkte werden gerade gezeichnet
-
-    /**
-     * Läuft das Gerät dauerhaft unter ~40 Bildern pro Sekunde, zeichnen wir
-     * weniger Punkte und mit weniger Schärfe. Flüssig ist wichtiger als dicht.
-     */
-    function adaptQuality(frameMs) {
-      if (document.hidden || frameMs > 1000) return;
-      if (frameMs > 25) slowFrames++;
-      else if (frameMs < 18) slowFrames = Math.max(0, slowFrames - 1);
-      if (slowFrames < 20) return;
-      slowFrames = 0;
+    let drawn = FLOWERS;
+    function adaptQuality(ms) {
+      if (document.hidden || ms > 1000) return;
+      if (ms > 25) slow++;
+      else if (ms < 18) slow = Math.max(0, slow - 1);
+      if (slow < 20) return;
+      slow = 0;
       if (renderer.getPixelRatio() > 1) {
         renderer.setPixelRatio(Math.max(1, renderer.getPixelRatio() - 0.5));
         resize();
-      } else if (active > 3000) {
-        active = Math.max(3000, Math.floor(active * 0.6));
-        geometry.setDrawRange(0, active);
+      } else if (drawn > 3000) {
+        drawn = Math.floor(drawn * 0.6);
+        flowers.geometry.setDrawRange(0, drawn);
       }
     }
 
+    const camBase = new THREE.Vector3(0, 1.35, 6.5);
+    camera.position.copy(camBase); // sofort über dem Feld starten, nicht im Boden
+    camera.lookAt(LOOK);
     function frame(now) {
       requestAnimationFrame(frame);
       if (!visible) return;
-      if (!startTime) startTime = now;
-      const t = (now - startTime) / 1000;
       if (lastTime) adaptQuality(now - lastTime);
       lastTime = now;
+      const t = REDUCED ? 0 : now / 1000;
 
-      if (!REDUCED) {
-        // Beim Scrollen aus dem ersten Bildschirm fliegen die Punkte auseinander
-        const rect = hero.getBoundingClientRect();
-        const scatter = Math.min(1, Math.max(0, -rect.top / (rect.height * 0.75))) ** 1.6 * 7;
+      // Kamera: leichte Parallaxe mit der Maus, beim Scrollen über das Feld nach vorn
+      const r = hero.getBoundingClientRect();
+      const scroll = REDUCED ? 0 : Math.min(1, Math.max(0, -r.top / r.height));
+      const targetX = camBase.x + pointer.nx * 0.5;
+      const targetY = camBase.y + pointer.ny * 0.15 - scroll * 0.5;
+      camera.position.x += (targetX - camera.position.x) * 0.05;
+      camera.position.y += (targetY - camera.position.y) * 0.05;
+      camera.position.z = camBase.z - scroll * 5;
+      camera.lookAt(LOOK);
 
-        for (let i = 0; i < active; i++) {
-          const i3 = i * 3;
-          const k = easeOutCubic(Math.min(1, Math.max(0, (t - delay[i]) / FLY_IN)));
-          let x = start[i3] + (target[i3] - start[i3]) * k;
-          let y = start[i3 + 1] + (target[i3 + 1] - start[i3 + 1]) * k;
-          let z = start[i3 + 2] + (target[i3 + 2] - start[i3 + 2]) * k;
-          // leichtes Atmen, damit der Name lebt
-          x += Math.sin(t * 0.9 + i) * 0.012 * k;
-          y += Math.cos(t * 0.7 + i * 1.3) * 0.012 * k;
-
-          // Maus drückt Punkte im Umkreis weg und etwas zur Kamera hin
-          const dx = x - mouse.x;
-          const dy = y - mouse.y;
-          const d2 = dx * dx + dy * dy;
-          let px = 0, py = 0, pz = 0;
-          if (d2 < RADIUS * RADIUS) {
-            const d = Math.sqrt(d2) || 0.001;
-            const f = (1 - d / RADIUS) ** 2 * 0.9;
-            px = (dx / d) * f;
-            py = (dy / d) * f;
-            pz = f * 1.2;
-          }
-          // weich nachziehen (Feder), statt hart zu springen
-          offset[i3] += (px - offset[i3]) * 0.1;
-          offset[i3 + 1] += (py - offset[i3 + 1]) * 0.1;
-          offset[i3 + 2] += (pz - offset[i3 + 2]) * 0.1;
-
-          pos[i3] = x + offset[i3] + scatterDir[i3] * scatter;
-          pos[i3 + 1] = y + offset[i3 + 1] + scatterDir[i3 + 1] * scatter;
-          pos[i3 + 2] = z + offset[i3 + 2] + scatterDir[i3 + 2] * scatter;
-        }
-        geometry.attributes.position.needsUpdate = true;
-        stars.rotation.y = t * 0.01;
-        // Kamera folgt der Maus ein wenig (Parallaxe, wirkt räumlich)
-        camera.position.x += (mouse.nx * 0.7 - camera.position.x) * 0.04;
-        camera.position.y += (mouse.ny * 0.4 - camera.position.y) * 0.04;
-        camera.lookAt(0, group.position.y * 0.5, 0);
+      if (pointer.active && !REDUCED) {
+        ndc.set(pointer.nx, pointer.ny);
+        ray.setFromCamera(ndc, camera);
+        if (ray.ray.intersectPlane(plane, hit)) materials.forEach((m) => m.uniforms.uMouse.value.set(hit.x, hit.z));
+      } else {
+        materials.forEach((m) => m.uniforms.uMouse.value.set(999, 999));
       }
+      materials.forEach((m) => { m.uniforms.uTime.value = t; });
       renderer.render(scene, camera);
     }
     requestAnimationFrame(frame);
@@ -266,10 +268,7 @@
   async function start() {
     if (!canvas || !supportsWebGL()) return;
     try {
-      await Promise.all([
-        loadScript(THREE_URL),
-        document.fonts ? document.fonts.load('800 100px Unbounded') : Promise.resolve(),
-      ]);
+      await loadScript(THREE_URL);
       if (!window.THREE) return;
       document.body.classList.add('gl-on');
       window.dispatchEvent(new Event('three:ready')); // weitere 3D-Szenen warten darauf

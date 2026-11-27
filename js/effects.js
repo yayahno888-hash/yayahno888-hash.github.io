@@ -73,15 +73,6 @@
   addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  /* 6. Uhrzeit in Rostock (deutsche Zeit, auch wenn der Besucher woanders ist) */
-  const clock = document.getElementById('clock');
-  if (clock) {
-    const fmt = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
-    const tick = () => { clock.textContent = fmt.format(new Date()); };
-    tick();
-    setInterval(tick, 10000);
-  }
-
   /* 7. Magnetische Knöpfe: ziehen sich leicht zur Maus */
   if (FINE && !REDUCED) {
     document.querySelectorAll('.mail, .contact a.b').forEach((el) => {
