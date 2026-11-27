@@ -87,6 +87,20 @@
     });
   }
 
+  /* Menü auf dem Handy: auf- und zuklappen, nach Klick auf einen Link oder mit Escape schließen */
+  const header = document.getElementById('top');
+  const menuButton = document.querySelector('.menu-btn');
+  if (menuButton) {
+    const setOpen = (open) => {
+      header.classList.toggle('open', open);
+      menuButton.setAttribute('aria-expanded', String(open));
+      menuButton.textContent = open ? 'Schließen' : 'Menü';
+    };
+    menuButton.addEventListener('click', () => setOpen(!header.classList.contains('open')));
+    document.querySelectorAll('.nav a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+  }
+
   /* 4. Werdegang: Linie füllt sich beim Scrollen, Punkte leuchten auf */
   const path = document.querySelector('.path');
   if (path) {

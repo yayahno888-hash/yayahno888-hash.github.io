@@ -5,7 +5,8 @@
 //  - Unter der Maus heben sich die Blüten und leuchten, beim Scrollen fliegt die Kamera nach vorn
 // Ohne WebGL bleibt nur der Name auf dunklem Grund stehen.
 (() => {
-  const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+  // three.js als ES-Modul (die alte Datei three.min.js ist veraltet und warnt in der Konsole)
+  const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
   const canvas = document.getElementById('gl');
   const hero = document.getElementById('hero');
   // "Bewegung reduzieren" (z. B. Windows: Animationseffekte aus): nicht alles abschalten,
@@ -31,15 +32,6 @@
     }
   }
 
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = resolve;
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
 
   /** Einfache Formen auf Canvas: Blatt der Wiese und einzelnes Blütenblatt */
   function canvasTexture(draw) {
@@ -368,8 +360,8 @@
     if (!canvas || !supportsWebGL()) { revealText(); return; }
     setTimeout(revealText, 3500); // Sicherheitsnetz: Text erscheint auf jeden Fall
     try {
-      await loadScript(THREE_URL);
-      if (!window.THREE) { revealText(); return; }
+      // Als Modul laden und global ablegen, damit auch js/scenes3d.js es nutzen kann
+      window.THREE = await import(THREE_URL);
       const tex = await loadFlowerTexture();
       if (!tex) { revealText(); return; }
       document.body.classList.add('gl-on');
