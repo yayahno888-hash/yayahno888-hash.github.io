@@ -109,7 +109,8 @@ img{display:block;max-width:100%;height:auto}
 .hero .foot{align-self:end}
 .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:0;font-size:15px;color:var(--mut);border-top:1px solid var(--line);padding-top:16px}
 .meta b{color:var(--ink);font-weight:600}
-@media(max-width:700px){
+@media(max-width:700px){.status{font-size:13.5px}}
+
 /* Zahlen */
 .proof{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .proof div{padding:26px 20px 24px 0}
@@ -249,7 +250,8 @@ body::after{content:"";position:fixed;inset:0;z-index:95;pointer-events:none;opa
 @media(pointer:coarse){body::after{display:none}}
 .rv{opacity:0;transform:translateY(28px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.rv{transform:none;transition:opacity .9s}</style>
+@media(prefers-reduced-motion:reduce){.rv{transform:none;transition:opacity .9s}}
+</style>
 </head>
 <body>
 <div id="cur" aria-hidden="true"><div class="r"></div></div>
