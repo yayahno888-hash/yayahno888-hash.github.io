@@ -272,6 +272,7 @@
       ]);
       if (!window.THREE) return;
       document.body.classList.add('gl-on');
+      window.dispatchEvent(new Event('three:ready')); // weitere 3D-Szenen warten darauf
       build();
     } catch (error) {
       document.body.classList.remove('gl-on');

@@ -100,7 +100,7 @@ h2{margin:0 0 44px;font:800 clamp(32px,4.6vw,66px)/1 Unbounded,Outfit;letter-spa
 
 /* Projekt-Karte mit Fächer aus Screenshots */
 .case{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);border-radius:28px;overflow:hidden;text-decoration:none;border:1px solid var(--line);background:radial-gradient(ellipse 70% 80% at 30% 55%,rgba(240,68,46,.20),transparent 65%),var(--card);transition:border-color .5s,transform .6s cubic-bezier(.2,.7,.2,1)}
-.case:hover{border-color:rgba(240,68,46,.45);transform:translateY(-4px)}
+.case:hover{border-color:rgba(240,68,46,.45)}
 .fan{position:relative;min-height:clamp(260px,32vw,440px)}
 .fan img{position:absolute;left:50%;top:50%;width:60%;border-radius:12px;box-shadow:0 24px 50px -18px rgba(0,0,0,.8);transition:transform .7s cubic-bezier(.2,.7,.2,1)}
 .fan .f1{transform:translate(-50%,-50%) translate(-36%,6%) rotate(-11deg) scale(.82)}
@@ -122,7 +122,7 @@ h2{margin:0 0 44px;font:800 clamp(32px,4.6vw,66px)/1 Unbounded,Outfit;letter-spa
 @media(max-width:900px){.case{grid-template-columns:minmax(0,1fr)}.fan{min-height:clamp(220px,62vw,380px)}}
 
 /* So arbeite ich */
-.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;margin:0;padding:0}
 .steps li{list-style:none;border-top:1px solid var(--line);padding-top:20px}
 .steps b{display:block;font:800 clamp(34px,3.6vw,52px)/1 Unbounded,Outfit;letter-spacing:-.03em;margin-bottom:14px}
 .steps h3{margin:0 0 8px;font-size:19px;font-weight:600;letter-spacing:-.01em}
@@ -161,7 +161,7 @@ h2{margin:0 0 44px;font:800 clamp(32px,4.6vw,66px)/1 Unbounded,Outfit;letter-spa
 /* Kontakt */
 .contact{text-align:center;padding:clamp(80px,12vw,160px) 0 clamp(40px,6vw,80px);background:radial-gradient(ellipse 60% 70% at 50% 60%,rgba(185,164,255,.13),transparent 70%)}
 .contact h2{margin:0 auto 22px;max-width:none;font-size:min(5.6vw,84px);line-height:1}
-.contact p{color:var(--mut);max-width:48ch;margin:0 auto 32px}
+.contact p{color:#b5b1aa;max-width:48ch;margin:0 auto 32px;text-shadow:0 1px 12px var(--bg),0 0 2px var(--bg)}
 .contact .ln{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .contact a.b{display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 24px;border-radius:99px;text-decoration:none;font-weight:600;border:1.5px solid var(--line);background:rgba(242,239,232,.05);overflow-wrap:anywhere}
 .contact a.b.f{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -169,6 +169,31 @@ h2{margin:0 0 44px;font:800 clamp(32px,4.6vw,66px)/1 Unbounded,Outfit;letter-spa
 .contact .fine{margin:26px auto 0;font-size:14px}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-top:28px;padding-bottom:28px;font-size:14px;color:var(--mut);border-top:1px solid var(--line)}
 
+/* Überschriften: Wörter steigen aus der Unschärfe auf */
+.split.rv{opacity:1;transform:none}
+.split .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.08em;margin-bottom:-.08em}
+.split .w>span{display:inline-block;transform:translateY(105%) rotate(4deg);filter:blur(8px);opacity:0;transition:transform 1s cubic-bezier(.2,.75,.2,1),filter 1s,opacity .8s;transition-delay:calc(var(--i)*70ms)}
+.split.in .w>span{transform:none;filter:none;opacity:1}
+/* Karte kippt in 3D mit der Maus, ein Lichtfleck folgt */
+.tilt{perspective:1400px}
+.case{transform-style:preserve-3d;position:relative;will-change:transform}
+.case .glare{position:absolute;inset:0;pointer-events:none;border-radius:inherit;opacity:0;transition:opacity .4s;background:radial-gradient(500px circle at var(--gx,50%) var(--gy,50%),rgba(255,255,255,.10),transparent 45%)}
+.case:hover .glare{opacity:1}
+/* 3D-Objekte in Abschnitten */
+.has3d{position:relative;overflow:hidden}
+.has3d>.wrap{position:relative;z-index:2}
+.obj3d{position:absolute;z-index:1;pointer-events:none}
+#net{right:max(-4vw,-60px);top:-150px;width:min(480px,50vw);height:min(480px,50vw);opacity:.75}
+.has3d .steps{background:linear-gradient(transparent,var(--bg) 35%)}
+#galaxy{inset:0;width:100%;height:100%}
+@media(max-width:700px){#net{opacity:.45;right:-30vw;top:20px;width:90vw;height:90vw}}
+/* Werdegang: Linie füllt sich beim Scrollen */
+.path{position:relative;padding-left:26px}
+.path::before,.path::after{content:"";position:absolute;left:0;top:0;width:2px;height:100%;background:var(--line)}
+.path::after{background:linear-gradient(var(--acc),var(--ok));transform-origin:top;transform:scaleY(var(--p,0))}
+.path li{position:relative}
+.path li::before{content:"";position:absolute;left:-31px;top:31px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--mut);transition:border-color .4s,background .4s}
+.path li.on::before{border-color:var(--acc);background:var(--acc);box-shadow:0 0 14px var(--acc)}
 .rv{opacity:0;transform:translateY(28px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.status i,.hint::after{animation:none}}
@@ -209,9 +234,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 <section id="work" aria-label="Projekte">
   <div class="wrap">
     <div class="kick rv"><b>01</b>Projekt</div>
-    <h2 class="rv">Ein Projekt, von der Idee bis online.</h2>
+    <h2 class="rv split">Ein Projekt, von der Idee bis online.</h2>
 
-    <a class="case rv" href="case-monit.html" data-view>
+    <div class="tilt rv">
+    <a class="case" href="case-monit.html" data-view>
+      <span class="glare" aria-hidden="true"></span>
       <div class="fan" aria-hidden="true">
         <img class="f1" src="img/monit-chart.jpg" width="790" height="478" alt="" loading="lazy">
         <img class="f2" src="img/monit-modes.jpg" width="790" height="478" alt="" loading="lazy">
@@ -225,13 +252,15 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
         <div class="go"><span>Case Study lesen</span><i>&rarr;</i></div>
       </div>
     </a>
+    </div>
   </div>
 </section>
 
-<section id="process" aria-label="So arbeite ich" style="padding-top:0">
+<section id="process" class="has3d" aria-label="So arbeite ich" style="padding-top:0">
+  <canvas id="net" class="obj3d" aria-hidden="true"></canvas>
   <div class="wrap">
     <div class="kick rv"><b>02</b>Arbeitsweise</div>
-    <h2 class="rv">So arbeite ich.</h2>
+    <h2 class="rv split">So arbeite ich.</h2>
     <ol class="steps rv">
       <li><b>01</b><h3>Idee zuerst</h3><p>Wofür steht das Produkt? Dazu sammle ich Referenzen und ziehe einzelne Ideen heraus, statt einen Stil zu kopieren.</p></li>
       <li><b>02</b><h3>Richtungen testen</h3><p>Bei Monit drei Design-Richtungen, zwei davon bewusst verworfen.</p></li>
@@ -274,17 +303,18 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
       <li class="goal"><span class="y">ab 2027</span><div><b>Ausbildung Fachinformatiker oder IT-Kaufmann</b><span>Daten- und Prozessanalyse, Anwendungsentwicklung, Systemintegration, Digitalisierungs- oder IT-System-Management. Start ab August 2027, Ort offen: Ich ziehe für die richtige Stelle um.</span></div><em>gesucht</em></li>
       <li><span class="y">heute</span><div><b>Hundertwasser-Gesamtschule Rostock</b><span>10. Klasse, Mittlere Reife 2027</span></div><em>Schule</em></li>
       <li><span class="y">Nov 2026</span><div><b>Monit</b><span>Eigenes Projekt: Marke, Gestaltung und 3D-Website, live auf GitHub Pages.</span></div><em>Projekt</em></li>
-      <li><span class="y">bis 05/2026</span><div><b>Technischer Support</b><span>Remote, für ein ukrainisches Projekt.</span></div><em>Erfahrung</em></li>
+      <li><span class="y">bis 05/2026</span><div><b>Technischer Support</b><span>Remote, für ein internationales Projekt.</span></div><em>Erfahrung</em></li>
       <li><span class="y">12/2025</span><div><b>Autohaus360</b><span>Schülerpraktikum in Rostock</span></div><em>Praktikum</em></li>
       <li><span class="y">02/2025</span><div><b>VETEC</b><span>Schülerpraktikum</span></div><em>Praktikum</em></li>
     </ol>
   </div>
 </section>
 
-<section id="contact" class="contact" aria-label="Kontakt">
+<section id="contact" class="contact has3d" aria-label="Kontakt">
+  <canvas id="galaxy" class="obj3d" aria-hidden="true"></canvas>
   <div class="wrap">
     <div class="kick rv" style="justify-content:center"><b>06</b>Kontakt</div>
-    <h2 class="rv">Ausbildungsplatz frei?</h2>
+    <h2 class="rv split">Ausbildungsplatz frei?</h2>
     <p class="rv">Ich freue mich über Nachrichten zu Ausbildungsplätzen, Praktika oder einfach Feedback zu meinen Projekten. Verfügbar ab August 2027, bundesweit umzugsbereit.</p>
     <div class="ln rv"><a class="b f" href="mailto:kyryloyakhno@gmail.com">kyryloyakhno@gmail.com</a><a class="b" href="https://github.com/yayahno888-hash">GitHub ↗</a><a class="b" href="case-monit.html">Case Study Monit</a></div>
     <p class="fine rv">Lebenslauf und Zeugnisse schicke ich gern per E-Mail.</p>
@@ -311,5 +341,7 @@ if(matchMedia('(pointer:fine)').matches){const c=$('#cur');let x=0,y=0,cx=0,cy=0
 }
 </script>
 <script src="js/hero.js" defer></script>
+<script src="js/effects.js" defer></script>
+<script src="js/scenes3d.js" defer></script>
 </body>
 </html>
