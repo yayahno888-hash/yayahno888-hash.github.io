@@ -59,6 +59,43 @@
     card.addEventListener('pointerleave', () => { targetX = targetY = 0; kick(); });
   }
 
+  /* 5. Fortschrittsbalken oben und aktiver Abschnitt in der Navigation */
+  const bar = document.getElementById('progress');
+  const navLinks = [...document.querySelectorAll('.nav a')];
+  const sections = navLinks.map((a) => document.querySelector(a.getAttribute('href')));
+  const onScroll = () => {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (bar) bar.style.setProperty('--s', (max > 0 ? scrollY / max : 0).toFixed(4));
+    let current = -1;
+    sections.forEach((sec, i) => { if (sec && sec.getBoundingClientRect().top < innerHeight * 0.4) current = i; });
+    navLinks.forEach((a, i) => a.classList.toggle('on', i === current));
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* 6. Uhrzeit in Rostock (deutsche Zeit, auch wenn der Besucher woanders ist) */
+  const clock = document.getElementById('clock');
+  if (clock) {
+    const fmt = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' });
+    const tick = () => { clock.textContent = fmt.format(new Date()); };
+    tick();
+    setInterval(tick, 10000);
+  }
+
+  /* 7. Magnetische Knöpfe: ziehen sich leicht zur Maus */
+  if (FINE && !REDUCED) {
+    document.querySelectorAll('.mail, .contact a.b').forEach((el) => {
+      el.classList.add('btn-mag');
+      el.addEventListener('pointermove', (e) => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width / 2) * 0.3;
+        const y = (e.clientY - r.top - r.height / 2) * 0.4;
+        el.style.transform = `translate(${x}px, ${y}px)`;
+      });
+      el.addEventListener('pointerleave', () => { el.style.transform = ''; });
+    });
+  }
+
   /* 4. Werdegang: Linie füllt sich beim Scrollen, Punkte leuchten auf */
   const path = document.querySelector('.path');
   if (path) {

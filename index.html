@@ -194,6 +194,39 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 .path li{position:relative}
 .path li::before{content:"";position:absolute;left:-31px;top:31px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--mut);transition:border-color .4s,background .4s}
 .path li.on::before{border-color:var(--acc);background:var(--acc);box-shadow:0 0 14px var(--acc)}
+/* ---- Kleine Lebenszeichen ---- */
+/* Feines Filmkorn über allem */
+body::after{content:"";position:fixed;inset:-50%;z-index:95;pointer-events:none;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain 1s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+/* Fortschritt beim Scrollen */
+.progress{position:fixed;left:0;top:0;height:2px;width:100%;z-index:60;transform-origin:left;transform:scaleX(var(--s,0));background:linear-gradient(90deg,var(--acc),var(--ok))}
+/* Aktiver Abschnitt in der Navigation */
+.nav a{position:relative;transition:opacity .3s}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--acc);transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.nav a:hover::after,.nav a.on::after{transform:scaleX(1)}
+.nav a.on{opacity:1}
+/* Uhrzeit in Rostock */
+.clock{font-variant-numeric:tabular-nums}
+.clock i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:7px;vertical-align:middle;animation:blink 2s infinite}
+@keyframes blink{50%{opacity:.25}}
+/* Laufband */
+.marquee{overflow:hidden;border-bottom:1px solid var(--line);padding:22px 0;white-space:nowrap;-webkit-mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.marquee .t{display:inline-flex;gap:28px;padding-right:28px;font:600 clamp(18px,2vw,26px)/1 Unbounded,Outfit;letter-spacing:-.02em;color:#5f5b57;animation:run 38s linear infinite}
+.marquee .t b{color:var(--ink);font-weight:600}
+.marquee .t i{font-style:normal;color:var(--acc)}
+@keyframes run{to{transform:translateX(-100%)}}
+/* Kleine Hover-Reaktionen */
+.sk li{transition:transform .3s cubic-bezier(.2,.7,.2,1),border-color .3s,box-shadow .3s}
+.sk li:hover{transform:translateY(-3px);border-color:rgba(185,164,255,.5);box-shadow:0 8px 24px -12px rgba(185,164,255,.6)}
+.path li>div{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.path li:hover>div{transform:translateX(8px)}
+.path li:hover b{color:#fff}
+.btn-mag{transition:transform .25s cubic-bezier(.2,.7,.2,1)}
+/* Der Fächer atmet leicht, solange die Maus nicht darauf ist */
+.case:not(:hover) .fan{animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateY(-6px) rotate(-.6deg)}}
+@media(prefers-reduced-motion:reduce){body::after,.marquee .t,.case .fan,.clock i{animation:none!important}}
+@media(pointer:coarse){body::after{display:none}}
 .rv{opacity:0;transform:translateY(28px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.status i,.hint::after{animation:none}}
@@ -201,6 +234,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 </head>
 <body>
 <div id="cur" aria-hidden="true"><div class="r"></div></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
 
 <header class="top" id="top">
   <div class="wrap">
@@ -217,7 +251,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
   <div class="wrap name disp" aria-label="Kyrylo Yakhno"><span>Kyrylo</span><span>Yakhno</span></div>
   <div class="wrap foot">
     <h1>Ich entwerfe Websites, die sich wie ein Produkt anfühlen, mit <span class="sw" id="sw"><span>klarer Idee.</span><span>3D im Browser.</span><span>Liebe zum Detail.</span></span></h1>
-    <div class="meta"><span><b>IT · Web · 3D im Browser</b></span><span>Rostock · umzugsbereit, z.&nbsp;B. nach München oder Berlin</span><span>Deutsch B2 · Englisch B1 · Ukrainisch und Russisch Muttersprache</span></div>
+    <div class="meta"><span><b>IT · Web · 3D im Browser</b></span><span>Rostock · umzugsbereit, z.&nbsp;B. nach München oder Berlin</span><span class="clock" aria-label="Uhrzeit in Rostock"><i></i>Rostock · <b id="clock">--:--</b></span><span>Deutsch B2 · Englisch B1 · Ukrainisch und Russisch Muttersprache</span></div>
   </div>
   <div class="hint" aria-hidden="true">Maus bewegen</div>
 </section>
@@ -230,6 +264,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
     <div><b>2027</b><span>Ausbildungsstart, bundesweit umzugsbereit</span></div>
   </div>
 </div>
+
+<div class="marquee" aria-hidden="true"><div class="t"><b>Fachinformatiker</b><i>✦</i><span>IT-Kaufmann</span><i>✦</i><b>ab August 2027</b><i>✦</i><span>bundesweit umzugsbereit</span><i>✦</i><b>Daten &amp; Prozesse</b><i>✦</i><span>Web &amp; 3D</span><i>✦</i></div><div class="t"><b>Fachinformatiker</b><i>✦</i><span>IT-Kaufmann</span><i>✦</i><b>ab August 2027</b><i>✦</i><span>bundesweit umzugsbereit</span><i>✦</i><b>Daten &amp; Prozesse</b><i>✦</i><span>Web &amp; 3D</span><i>✦</i></div></div>
 
 <section id="work" aria-label="Projekte">
   <div class="wrap">
