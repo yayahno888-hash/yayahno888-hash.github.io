@@ -215,8 +215,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
       <div><div class="n">Modi</div><h3>Farbe als System</h3><p>Jeder Modus hat eine eigene Palette. Hintergrund, Schrift, Tab-Icon und sogar die Farbe der Browserleiste wechseln gemeinsam, und jeder Modus hat einen eigenen Link.</p></div>
       <div><div class="n">Anatomie</div><h3>Zutaten aus der Dose</h3><p>Linien führen von der Dose zu den Zutaten des jeweiligen Modus. Beim Wechsel ordnen sie sich neu.</p></div>
       <div><div class="n">Auswahl</div><h3>Mini-Dosen als Menü</h3><p>Die Vorschaubilder im Menü werden beim Laden aus denselben 3D-Modellen gerendert. Keine Bilddateien.</p></div>
-      <div><div class="n">Leistung</div><h3>Eine Schleife für alles</h3><p>Alle 3D-Szenen laufen in einer gemeinsamen Animationsschleife und pausieren außerhalb des Bildschirms. Texturen werden vorab vorbereitet, die Bildschärfe passt sich dem Gerät an.</p></div>
-      <div><div class="n">Mobil</div><h3>Eigene Kameras fürs Handy</h3><p>Auf schmalen Bildschirmen rücken Kamera und Layout neu zusammen, statt einfach nur kleiner zu werden. Auf dem iPhone läuft eine leichtere Version, damit es flüssig bleibt.</p></div>
+      <div><div class="n">Leistung</div><h3>Eine Schleife für alles</h3><p>Alle 3D-Szenen laufen in einer gemeinsamen Animationsschleife und pausieren außerhalb des Bildschirms. Shader werden vorab vorbereitet. Läuft ein Gerät nicht flüssig, senkt die Seite selbst die Bildschärfe, bis es wieder flüssig ist.</p></div>
+      <div><div class="n">Mobil</div><h3>Eigene Kameras fürs Handy</h3><p>Auf schmalen Bildschirmen rücken Kamera und Layout neu zusammen, statt einfach nur kleiner zu werden. Auf dem Handy läuft eine leichtere Version, und ohne 3D-Unterstützung erscheint eine flache Dose aus CSS.</p></div>
     </div>
     <div class="sw rv" aria-label="Farben der sechs Modi"><i style="background:#F0442E"></i><i style="background:#F2C14E"></i><i style="background:#B8C98A"></i><i style="background:#7650A8"></i><i style="background:#1d1d1d"></i><i style="background:#E8E4DC"></i></div>
   </div>
@@ -225,12 +225,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
 <section aria-label="Ergebnis" style="padding-top:0">
   <div class="wrap">
     <div class="kick rv"><b>05</b>Ergebnis</div>
-    <h2 class="rv">Eine Datei, keine Bilder.</h2>
+    <h2 class="rv">Aufgeräumt, getestet, keine Fotos.</h2>
     <div class="nums rv">
-      <div><b>1</b><span>HTML-Datei für die ganze Seite</span></div>
-      <div><b>0</b><span>Bilddateien, alles wird live gerendert</span></div>
+      <div><b>11</b><span>kleine JavaScript-Module statt einer großen Datei</span></div>
+      <div><b>0</b><span>Fotos der Dosen, alles wird live gerendert</span></div>
       <div><b>6</b><span>Modi mit eigener Farbwelt</span></div>
-      <div><b>~55 KB</b><span>eigener Code, dazu three.js, GSAP und Lenis</span></div>
+      <div><b>9</b><span>automatische Tests, die bei jedem Push auf GitHub laufen</span></div>
     </div>
   </div>
 </section>
@@ -245,6 +245,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;
       <li><b>Bewegung braucht einen Grund.</b><span>Animation soll das Produkt zeigen, nicht vom Produkt ablenken.</span></li>
       <li><b>Eine Marke braucht eine Idee, nicht nur ein Design.</b><span>Erst als klar war, wofür Monit steht, ruhige Energie für lange Sessions, passten Name, Modi und Texte zusammen.</span></li>
       <li><b>Auf echten Geräten testen.</b><span>Mein Laptop-Bildschirm ist niedriger als gedacht, und auf dem Handy war die Dose erst viel zu groß. Gefunden habe ich das nur durch Ausprobieren.</span></li>
+      <li><b>Schärfer ist nicht immer besser.</b><span>Für schärfere Dosen auf dem Handy habe ich die Bildschärfe erhöht, danach ruckelte das Scrollen. Jetzt passt die Seite die Schärfe selbst an das Gerät an. Getestet über das WLAN auf meinem eigenen Handy.</span></li>
+      <li><b>Code muss man lesen können.</b><span>Die erste Version war eine einzige Datei mit sehr langen Zeilen. Ich habe sie in Module mit klaren Namen aufgeteilt, damit ich und andere jede Stelle finden und erklären können.</span></li>
     </ol>
   </div>
 </section>
