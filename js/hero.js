@@ -8,7 +8,10 @@
   const THREE_URL = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
   const canvas = document.getElementById('gl');
   const hero = document.getElementById('hero');
+  // "Bewegung reduzieren" (z. B. Windows: Animationseffekte aus): nicht alles abschalten,
+  // sondern ruhiger machen. Weg fallen nur große Bewegungen (Kameraflug, Parallaxe).
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CALM = REDUCED ? 0.45 : 1; // Tempo von Wind und Drehung
   const PHONE = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 900;
   const FLOWERS = PHONE ? 6500 : 16000;
   const LEAVES = PHONE ? 1500 : 3500;
@@ -232,7 +235,7 @@
     const petalMat = makeMaterial(petalTexture(), 0.85, 0, 0);
     const flowers = field(FLOWERS, flowerMat, () => tints[(Math.random() * tints.length) | 0], [0.15, 0.32], 0.05);
     const leaves = field(LEAVES, leafMat, () => [0.12 + Math.random() * 0.06, 0.3 + Math.random() * 0.12, 0.25], [0.22, 0.45], -0.05);
-    const petals = REDUCED ? null : flyingPetals(petalMat);
+    const petals = flyingPetals(petalMat);
     scene.add(leaves, flowers);
     if (petals) scene.add(petals);
 
@@ -315,10 +318,10 @@
       if (lastTime && (now - start) / 1000 > INTRO + 1.5) adaptQuality(now - lastTime);
       lastTime = now;
       const age = (now - start) / 1000;
-      const t = REDUCED ? 0 : now / 1000;
+      const t = (now / 1000) * CALM;
 
       // Intro: Welle vom Horizont (z = -50) bis hinter die Kamera (z = 10)
-      const k = REDUCED ? 1 : Math.min(1, age / INTRO);
+      const k = Math.min(1, age / (REDUCED ? INTRO * 0.7 : INTRO));
       // Welle startet zügig und läuft weich aus (kein Ruck am Ende), über die Kamera hinaus
       const front = -50 + easeOutQuart(k) * 66;
       if (!textShown && k > 0.3) { textShown = true; revealText(); } // Name, wenn die Welle die Mitte des Feldes erreicht
@@ -326,12 +329,13 @@
       // Kamera: leichte Parallaxe mit der Maus, beim Scrollen über das Feld nach vorn
       const r = hero.getBoundingClientRect();
       const scroll = REDUCED ? 0 : Math.min(1, Math.max(0, -r.top / r.height));
-      camera.position.x += (camBase.x + pointer.nx * 0.5 - camera.position.x) * 0.05;
-      camera.position.y += (camBase.y + pointer.ny * 0.15 - scroll * 0.5 - camera.position.y) * 0.05;
+      const sway = REDUCED ? 0 : 1; // Parallaxe nur bei normaler Bewegung
+      camera.position.x += (camBase.x + pointer.nx * 0.5 * sway - camera.position.x) * 0.05;
+      camera.position.y += (camBase.y + pointer.ny * 0.15 * sway - scroll * 0.5 - camera.position.y) * 0.05;
       camera.position.z = camBase.z - scroll * 5 + (1 - easeInOut(k)) * 2.2; // beim Intro langsam heranfahren
       camera.lookAt(LOOK);
 
-      if (pointer.active && !REDUCED && ray) {
+      if (pointer.active && ray) {
         ndc.set(pointer.nx, pointer.ny);
         ray.setFromCamera(ndc, camera);
         if (ray.ray.intersectPlane(plane, hit)) flowerMat.uniforms.uMouse.value.set(hit.x, hit.z);

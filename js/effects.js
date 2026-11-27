@@ -17,7 +17,7 @@
   const counters = document.querySelectorAll('.proof b');
   const countUp = (el) => {
     const end = parseInt(el.textContent, 10);
-    if (Number.isNaN(end) || REDUCED) return;
+    if (Number.isNaN(end)) return;
     const from = end > 1000 ? end - 30 : 0; // 2027 zählt von 1997 hoch, nicht von 0
     const start = performance.now();
     const step = (now) => {
@@ -36,7 +36,7 @@
 
   /* 3. Projektkarte kippt in 3D zur Maus, ein Lichtfleck folgt dem Zeiger */
   const card = document.querySelector('.case');
-  if (card && FINE && !REDUCED) {
+  if (card && FINE) { // kleine Bewegung, nur wenn der Nutzer selbst die Maus bewegt
     let targetX = 0, targetY = 0, x = 0, y = 0, running = false;
     const animate = () => {
       x += (targetX - x) * 0.12;

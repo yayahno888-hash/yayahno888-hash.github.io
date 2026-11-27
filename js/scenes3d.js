@@ -50,7 +50,7 @@
       if (!start) start = now;
       const r = section.getBoundingClientRect();
       const scroll = 1 - (r.top + r.height) / (innerHeight + r.height); // 0 = kommt rein, 1 = geht raus
-      onFrame(REDUCED ? 0 : (now - start) / 1000, scroll);
+      onFrame(((now - start) / 1000) * (REDUCED ? 0.4 : 1), scroll); // ruhiger, aber nicht eingefroren
       renderer.render(scene, camera);
     };
     requestAnimationFrame(loop);

@@ -88,7 +88,8 @@ img{display:block;max-width:100%;height:auto}
 .name{background-image:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%),linear-gradient(180deg,#ffffff 0%,#f4f2f8 38%,#b9b5c8 72%,#ecebf2 100%);background-size:250% 100%,100% 100%;background-position:120% 0,0 0;background-repeat:no-repeat}
 .intro-done .name{animation:shine 2.4s 1.6s cubic-bezier(.45,0,.25,1) both}
 @keyframes shine{from{background-position:120% 0,0 0}to{background-position:-20% 0,0 0}}
-@media(prefers-reduced-motion:reduce){.js .hero .name,.js .hero .status,.js .hero .foot{opacity:1;filter:none;transform:none;transition:none}.intro-done .name{animation:none}}
+/* Weniger Bewegung: Name und Text blenden nur weich ein, ohne Zoom und Verschieben */
+@media(prefers-reduced-motion:reduce){.js .hero .name,.js .hero .status,.js .hero .foot{transform:none}.js .hero .name{letter-spacing:-.05em}}
 /* Unten etwas abdunkeln, damit der Text über den nahen Blüten lesbar bleibt */
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;z-index:1;pointer-events:none;background:linear-gradient(transparent,rgba(11,11,12,.78))}
 .hero .foot{align-self:end}
@@ -243,7 +244,7 @@ body::after{content:"";position:fixed;inset:-50%;z-index:95;pointer-events:none;
 @media(pointer:coarse){body::after{display:none}}
 .rv{opacity:0;transform:translateY(28px);transition:opacity .9s,transform .9s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}.status i,.hint::after{animation:none}}
+@media(prefers-reduced-motion:reduce){.rv{transform:none;transition:opacity .9s}.hint::after{animation:none}}
 </style>
 </head>
 <body>
