@@ -59,21 +59,68 @@
     card.addEventListener('pointerleave', () => { targetX = targetY = 0; kick(); });
   }
 
-  /* 5. Fortschrittsbalken oben und aktiver Abschnitt in der Navigation */
+  /* 4. Weiches Scrollen (Lenis) und alles, was vom Scrollen abhängt, in EINEM Durchlauf pro Bild.
+        Vorher liefen drei Scroll-Handler bei jedem Pixel; jetzt höchstens einmal pro Bild. */
   const bar = document.getElementById('progress');
+  const header = document.getElementById('top');
   const navLinks = [...document.querySelectorAll('.nav a')];
   const sections = navLinks.map((a) => document.querySelector(a.getAttribute('href')));
-  const onScroll = () => {
-    const max = document.documentElement.scrollHeight - innerHeight;
-    if (bar) bar.style.setProperty('--s', (max > 0 ? scrollY / max : 0).toFixed(4));
-    let current = -1;
-    sections.forEach((sec, i) => { if (sec && sec.getBoundingClientRect().top < innerHeight * 0.4) current = i; });
-    navLinks.forEach((a, i) => a.classList.toggle('on', i === current));
-  };
-  addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
+  const path = document.querySelector('.path');
+  const pathItems = path ? [...path.children] : [];
 
-  /* 7. Magnetische Knöpfe: ziehen sich leicht zur Maus */
+  // Positionen nur bei Größenänderung messen, nicht bei jedem Scrollen
+  let layout = null;
+  const measure = () => {
+    layout = {
+      max: document.documentElement.scrollHeight - innerHeight,
+      sectionTops: sections.map((sec) => (sec ? sec.getBoundingClientRect().top + scrollY : Infinity)),
+      pathTop: path ? path.getBoundingClientRect().top + scrollY : 0,
+      pathHeight: path ? path.offsetHeight : 1,
+      itemTops: pathItems.map((li) => li.offsetTop + 30),
+    };
+  };
+
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    if (!layout) measure();
+    const y = scrollY;
+    header.classList.toggle('sc', y > 30);
+    if (bar) bar.style.setProperty('--s', (layout.max > 0 ? y / layout.max : 0).toFixed(4));
+    let current = -1;
+    layout.sectionTops.forEach((top, i) => { if (top - y < innerHeight * 0.4) current = i; });
+    navLinks.forEach((a, i) => a.classList.toggle('on', i === current));
+    if (path) {
+      const p = REDUCED ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.75 - (layout.pathTop - y)) / layout.pathHeight));
+      path.style.setProperty('--p', p.toFixed(3));
+      pathItems.forEach((li, i) => li.classList.toggle('on', layout.itemTops[i] <= p * layout.pathHeight));
+    }
+  };
+  const requestUpdate = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', requestUpdate, { passive: true });
+  addEventListener('resize', () => { measure(); requestUpdate(); });
+  new ResizeObserver(() => { measure(); requestUpdate(); }).observe(document.body);
+  update();
+
+  // Lenis glättet Mausrad und Touchpad (wie bei Monit).
+  // Bei "Bewegung reduzieren" auch weich, aber kürzer (weniger Nachlaufen).
+  let lenis = null;
+  if (window.Lenis) {
+    lenis = new Lenis({ lerp: REDUCED ? 0.18 : 0.1, wheelMultiplier: 1 });
+    document.documentElement.classList.add('lenis');
+    const raf = (time) => { lenis.raf(time); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+  }
+  // Links wie #work: weich mit Lenis scrollen, Kopfzeile (72 px) nicht verdecken lassen
+  document.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (!target) return;
+    e.preventDefault();
+    if (lenis) lenis.scrollTo(target, { offset: -72, duration: REDUCED ? 0.7 : 1.2 });
+    else target.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
+  }));
+
+  /* 5. Magnetische Knöpfe: ziehen sich leicht zur Maus */
   if (FINE && !REDUCED) {
     document.querySelectorAll('.mail, .contact a.b').forEach((el) => {
       el.classList.add('btn-mag');
@@ -87,8 +134,7 @@
     });
   }
 
-  /* Menü auf dem Handy: auf- und zuklappen, nach Klick auf einen Link oder mit Escape schließen */
-  const header = document.getElementById('top');
+  /* 6. Menü auf dem Handy: auf- und zuklappen, nach Klick auf einen Link oder mit Escape schließen */
   const menuButton = document.querySelector('.menu-btn');
   if (menuButton) {
     const setOpen = (open) => {
@@ -101,18 +147,4 @@
     addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
   }
 
-  /* 4. Werdegang: Linie füllt sich beim Scrollen, Punkte leuchten auf */
-  const path = document.querySelector('.path');
-  if (path) {
-    const items = [...path.children];
-    const update = () => {
-      const r = path.getBoundingClientRect();
-      const p = REDUCED ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.75 - r.top) / r.height));
-      path.style.setProperty('--p', p.toFixed(3));
-      items.forEach((li) => li.classList.toggle('on', li.offsetTop + 30 <= p * r.height));
-    };
-    addEventListener('scroll', update, { passive: true });
-    addEventListener('resize', update);
-    update();
-  }
 })();
